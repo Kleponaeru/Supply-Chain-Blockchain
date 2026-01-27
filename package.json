@@ -12,7 +12,9 @@
   "type": "commonjs",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "chai": "^4.3.10",
     "ethers": "^5.7.2",
-    "hardhat": "^2.22.1"
+    "hardhat": "^2.22.1",
+    "mocha": "^11.7.5"
   }
 }
