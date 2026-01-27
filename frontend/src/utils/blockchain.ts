@@ -4,7 +4,7 @@ import SupplyChainAbi from "../../../artifacts/contracts/SupplyChain.sol/SupplyC
 
 const CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS ||
-  "0x5FbDB2315678afccb333f8a9c36b1d19D82E90cE";
+  "0xa733E8329cc096b232DAC55C9feDD10AeD1E9421";
 
 export interface WalletConnection {
   provider: ethers.providers.Web3Provider;
