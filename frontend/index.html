@@ -1,19 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Supply Chain Blockchain</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
   </head>
   <body>
-    <h1>Supply Chain Tracker</h1>
-
-    <button onclick="createProduct()">Create Product</button>
-    <button onclick="toDistributor()">Send to Distributor</button>
-    <button onclick="toRetailer()">Send to Retailer</button>
-
-    <pre id="output"></pre>
-
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-    <script src="app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
