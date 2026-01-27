@@ -1,49 +1,334 @@
-import React, { useState } from "react";
-import { connectWallet, getContract } from "../utils/blockchain";
+import React, { useState, useEffect } from "react";
+import {
+  connectWallet,
+  Product,
+  getProductHistory,
+  transferProduct,
+  HistoryRecord,
+} from "../utils/blockchain";
+import ProductCard from "../components/ProductCard";
+import Modal from "../components/Modal";
+import Alert from "../components/Alert";
+import LoadingSpinner from "../components/LoadingSpinner";
+import StatusBadge from "../components/StatusBadge";
 
 const Distributor: React.FC = () => {
-  const [productId, setProductId] = useState("");
-  const [receiver, setReceiver] = useState("");
-  const [status, setStatus] = useState("");
+  const [receivedProducts, setReceivedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const receiveProduct = async () => {
-    const wallet = await connectWallet();
-    if (!wallet) return;
+  // Transfer Modal
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [retailerAddress, setRetailerAddress] = useState("");
+  const [isTransferring, setIsTransferring] = useState(false);
 
-    const contract = getContract(wallet.signer);
-    const tx = await contract.transferToRetailer(productId, receiver);
-    await tx.wait();
-    setStatus(`Product #${productId} transferred to retailer!`);
-    setProductId("");
-    setReceiver("");
+  // Product Details Modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedProductDetails, setSelectedProductDetails] =
+    useState<Product | null>(null);
+  const [productHistory, setProductHistory] = useState<HistoryRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    loadReceivedProducts();
+  }, []);
+
+  const loadReceivedProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const wallet = await connectWallet();
+      if (!wallet) throw new Error("Wallet connection failed");
+      // In a real app, you'd fetch products received by this distributor
+      // For now, we'll show an empty state
+      setReceivedProducts([]);
+    } catch (err: any) {
+      setError(err.message || "Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = async (product: Product) => {
+    setSelectedProductDetails(product);
+    setLoadingHistory(true);
+    try {
+      const wallet = await connectWallet();
+      if (!wallet) throw new Error("Wallet connection failed");
+
+      const history = await getProductHistory(
+        Number(product.id),
+        wallet.signer,
+      );
+      setProductHistory(history);
+    } catch (err: any) {
+      setError(err.message || "Failed to load product history");
+    } finally {
+      setLoadingHistory(false);
+    }
+    setShowDetailsModal(true);
+  };
+
+  const handleTransferProduct = async () => {
+    if (!selectedProduct || !retailerAddress.trim()) {
+      setError("Please select a product and enter retailer address");
+      return;
+    }
+
+    setIsTransferring(true);
+    setError(null);
+
+    try {
+      const wallet = await connectWallet();
+      if (!wallet) throw new Error("Wallet connection failed");
+
+      await transferProduct(
+        Number(selectedProduct.id),
+        retailerAddress,
+        wallet.signer,
+      );
+      setSuccess(`✓ Product transferred to retailer successfully!`);
+      setRetailerAddress("");
+      setSelectedProduct(null);
+      setShowTransferModal(false);
+      await loadReceivedProducts();
+    } catch (err: any) {
+      setError(err.message || "Failed to transfer product");
+    } finally {
+      setIsTransferring(false);
+    }
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Distributor Dashboard</h1>
-      <div className="space-y-2">
-        <input
-          type="text"
-          placeholder="Product ID"
-          value={productId}
-          onChange={(e) => setProductId(e.target.value)}
-          className="border px-2 py-1 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Retailer Address"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-          className="border px-2 py-1 rounded"
-        />
-        <button
-          onClick={receiveProduct}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-        >
-          Transfer to Retailer
-        </button>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-4xl">🚚</span>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Distributor Dashboard
+          </h1>
+        </div>
+        <p className="text-gray-600">
+          Manage received products and distribute to retailers
+        </p>
       </div>
-      {status && <p className="mt-4 text-green-600">{status}</p>}
+
+      {/* Alerts */}
+      <div className="space-y-3 mb-8">
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError(null)} />
+        )}
+        {success && (
+          <Alert
+            type="success"
+            message={success}
+            onClose={() => setSuccess(null)}
+          />
+        )}
+      </div>
+
+      {/* Received Products */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Received Products
+        </h2>
+
+        {loading ? (
+          <LoadingSpinner text="Loading products..." />
+        ) : receivedProducts.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+            <div className="text-5xl mb-3">📦</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              No Products Received Yet
+            </h3>
+            <p className="text-gray-600">
+              Wait for manufacturers to send products to your address
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {receivedProducts.map((product) => (
+              <div key={Number(product.id)} className="relative">
+                <ProductCard
+                  product={product}
+                  onAction={() => {
+                    setSelectedProduct(product);
+                    setShowTransferModal(true);
+                  }}
+                  actionLabel="Transfer to Retailer"
+                  actionColor="green"
+                />
+                <button
+                  onClick={() => handleViewDetails(product)}
+                  className="absolute top-3 right-3 w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full flex items-center justify-center text-lg transition"
+                  title="View details"
+                >
+                  ℹ
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Product Details Modal */}
+      <Modal
+        isOpen={showDetailsModal && !!selectedProductDetails}
+        title="Product Details & History"
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedProductDetails(null);
+          setProductHistory([]);
+        }}
+      >
+        {selectedProductDetails && (
+          <div className="space-y-6">
+            {/* Product Info */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Product Name</p>
+                  <p className="font-bold text-gray-800">
+                    {selectedProductDetails.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Batch ID</p>
+                  <p className="font-bold text-gray-800">
+                    {selectedProductDetails.batchId}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Status</p>
+                  <div className="mt-1">
+                    <StatusBadge status={selectedProductDetails.status} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-600">Owner</p>
+                  <p className="font-mono text-xs text-gray-800">
+                    {selectedProductDetails.owner.slice(0, 6)}...
+                    {selectedProductDetails.owner.slice(-4)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* History Timeline */}
+            <div>
+              <h3 className="font-bold text-gray-800 mb-4">
+                Transaction History
+              </h3>
+              {loadingHistory ? (
+                <LoadingSpinner text="Loading history..." />
+              ) : productHistory.length === 0 ? (
+                <p className="text-gray-600 text-center py-4">
+                  No history records
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {productHistory.map((record, index) => (
+                    <div
+                      key={index}
+                      className="flex gap-4 pb-4 border-b last:border-b-0"
+                    >
+                      <div className="flex-shrink-0">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full mt-1"></div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">
+                          {index === 0 ? "Product Created" : "Status Updated"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {record.actor.slice(0, 6)}...{record.actor.slice(-4)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(
+                            Number(record.timestamp) * 1000,
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowDetailsModal(false);
+                setSelectedProductDetails(null);
+              }}
+              className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </Modal>
+
+      {/* Transfer Modal */}
+      {selectedProduct && (
+        <Modal
+          isOpen={showTransferModal && !!selectedProduct}
+          title="Transfer to Retailer"
+          onClose={() => {
+            setShowTransferModal(false);
+            setSelectedProduct(null);
+            setRetailerAddress("");
+          }}
+        >
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm text-gray-600 mb-1">Product</p>
+              <p className="font-bold text-gray-800">{selectedProduct.name}</p>
+              <p className="text-sm text-gray-600">
+                Batch: {selectedProduct.batchId}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Retailer Address *
+              </label>
+              <input
+                type="text"
+                placeholder="0x..."
+                value={retailerAddress}
+                onChange={(e) => setRetailerAddress(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => {
+                  setShowTransferModal(false);
+                  setSelectedProduct(null);
+                  setRetailerAddress("");
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTransferProduct}
+                disabled={isTransferring}
+                className={`flex-1 px-4 py-2 rounded-lg font-bold text-white transition-all ${
+                  isTransferring
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {isTransferring ? "Transferring..." : "Transfer"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
