@@ -58,6 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleLogout = () => {
     setIsOpen(false);
+    localStorage.removeItem("walletConnected");
     onLogout();
   };
 

@@ -40,7 +40,44 @@ export enum Status {
   Delivered = 2,
 }
 
-// Connect to MetaMask
+// ==================== WALLET MANAGEMENT (UPDATED) ====================
+
+/**
+ * Disconnect wallet (clears app state)
+ */
+export const disconnectWallet = () => {
+  localStorage.removeItem("walletConnected");
+  console.log("🚪 Wallet disconnected from app");
+};
+
+/**
+ * Check if wallet was previously connected
+ */
+export const wasWalletConnected = (): boolean => {
+  return localStorage.getItem("walletConnected") === "true";
+};
+
+/**
+ * Get current connected accounts (if any) without triggering MetaMask popup
+ */
+export const getCurrentAccount = async (): Promise<string | null> => {
+  if (!window.ethereum) {
+    return null;
+  }
+
+  try {
+    const ethereum = window.ethereum as any;
+    const accounts = await ethereum.request?.({
+      method: "eth_accounts",
+    });
+    return accounts && accounts.length > 0 ? accounts[0] : null;
+  } catch (error) {
+    console.error("Error getting current account:", error);
+    return null;
+  }
+};
+
+// Connect to MetaMask (UPDATED)
 export async function connectWallet(): Promise<WalletConnection | null> {
   if (!window.ethereum) {
     throw new Error("MetaMask is not installed!");
@@ -62,6 +99,9 @@ export async function connectWallet(): Promise<WalletConnection | null> {
     const signer = provider.getSigner();
     const address = await signer.getAddress();
 
+    // Store connection state (NEW)
+    localStorage.setItem("walletConnected", "true");
+
     return { provider, signer, address };
   } catch (error: any) {
     if (error.code === 4001) {
@@ -70,6 +110,8 @@ export async function connectWallet(): Promise<WalletConnection | null> {
     throw new Error(error.message || "Failed to connect wallet");
   }
 }
+
+// ==================== CONTRACT INTERACTIONS (UNCHANGED) ====================
 
 // Get contract instance
 export function getContract(signer: Signer) {

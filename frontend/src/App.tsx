@@ -5,7 +5,12 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { connectWallet } from "./utils/blockchain";
+import {
+  connectWallet,
+  disconnectWallet,
+  wasWalletConnected,
+  getCurrentAccount,
+} from "./utils/blockchain";
 import { getRoleFromAddress } from "./config/walletConfig";
 import Login from "./pages/Login";
 import Manufacturer from "./pages/Manufacturer";
@@ -22,18 +27,25 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log("🚀 Initializing app...", window.ethereum?.selectedAddress);
-        if (window.ethereum?.selectedAddress) {
-          const result = await connectWallet();
-          if (result) {
-            console.log("📍 Found existing wallet connection:", result.address);
-            const detectedRole = getRoleFromAddress(result.address);
+        console.log("🚀 Initializing app...");
+
+        // Only auto-connect if user previously connected
+        if (wasWalletConnected()) {
+          const currentAccount = await getCurrentAccount();
+
+          if (currentAccount) {
+            console.log("📍 Found existing wallet connection:", currentAccount);
+            const detectedRole = getRoleFromAddress(currentAccount);
             console.log("👤 Detected role:", detectedRole);
-            setAddress(result.address);
+            setAddress(currentAccount);
             setRole(detectedRole);
+          } else {
+            console.log("📭 No wallet currently connected");
+            // Clear the flag if wallet is no longer connected
+            disconnectWallet();
           }
         } else {
-          console.log("📭 No wallet currently connected");
+          console.log("ℹ️ User has not previously connected wallet");
         }
       } catch (error) {
         console.log("ℹ️ Wallet initialization skipped:", error);
@@ -43,6 +55,34 @@ function App() {
     };
 
     initializeApp();
+  }, []);
+
+  // Listen for account changes in MetaMask
+  useEffect(() => {
+    if (!window.ethereum) return;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      console.log("🔄 MetaMask accounts changed:", accounts);
+
+      if (accounts.length === 0) {
+        // User disconnected from MetaMask
+        handleLogout();
+      } else if (wasWalletConnected()) {
+        // User switched accounts
+        handleAddressChange(accounts[0]);
+      }
+    };
+
+    window.ethereum.on?.("accountsChanged", handleAccountsChanged);
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener?.(
+          "accountsChanged",
+          handleAccountsChanged,
+        );
+      }
+    };
   }, []);
 
   const handleAddressChange = (newAddress: string) => {
@@ -55,6 +95,7 @@ function App() {
 
   const handleLogout = () => {
     console.log("🚪 Logging out...");
+    disconnectWallet();
     setAddress(null);
     setRole(0);
   };
