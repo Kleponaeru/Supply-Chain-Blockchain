@@ -9,7 +9,7 @@ import {
   connectWallet,
   disconnectWallet,
   wasWalletConnected,
-  getCurrentAccount,
+  silentReconnect,
 } from "./utils/blockchain";
 import { getRoleFromAddress } from "./config/walletConfig";
 import Login from "./pages/Login";
@@ -32,13 +32,14 @@ function App() {
       try {
         // Only auto-connect if user previously connected
         if (wasWalletConnected()) {
-          const currentAccount = await getCurrentAccount();
+          console.log("🔄 Attempting silent reconnection...");
+          const connection = await silentReconnect();
 
-          if (currentAccount) {
-            console.log("📍 Found existing wallet connection:", currentAccount);
-            const detectedRole = getRoleFromAddress(currentAccount);
+          if (connection) {
+            console.log("📍 Silently reconnected:", connection.address);
+            const detectedRole = getRoleFromAddress(connection.address);
             console.log("👤 Detected role:", detectedRole);
-            setAddress(currentAccount);
+            setAddress(connection.address);
             setRole(detectedRole);
           } else {
             console.log("📭 No wallet currently connected");

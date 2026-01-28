@@ -59,14 +59,21 @@ export const wasWalletConnected = (): boolean => {
 
 /**
  * Get current connected accounts (if any) without triggering MetaMask popup
+ * Only returns account if user previously connected through our app
  */
 export const getCurrentAccount = async (): Promise<string | null> => {
   if (!window.ethereum) {
     return null;
   }
 
+  // Don't auto-reconnect if user disconnected from our app
+  if (!wasWalletConnected()) {
+    return null;
+  }
+
   try {
     const ethereum = window.ethereum as any;
+    // eth_accounts returns connected accounts without prompting
     const accounts = await ethereum.request?.({
       method: "eth_accounts",
     });
@@ -77,15 +84,67 @@ export const getCurrentAccount = async (): Promise<string | null> => {
   }
 };
 
-// Connect to MetaMask (UPDATED)
+/**
+ * Silent reconnect on page load - does NOT show MetaMask popup
+ * Use this in useEffect on component mount
+ */
+export async function silentReconnect(): Promise<WalletConnection | null> {
+  if (!window.ethereum) {
+    return null;
+  }
+
+  if (!wasWalletConnected()) {
+    return null;
+  }
+
+  try {
+    const ethereum = window.ethereum as any;
+
+    // Use eth_accounts (no popup)
+    const accounts = await ethereum.request?.({
+      method: "eth_accounts",
+    });
+
+    if (!accounts || accounts.length === 0) {
+      return null;
+    }
+
+    const provider = new ethers.providers.Web3Provider(ethereum as any);
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
+
+    return { provider, signer, address };
+  } catch (error) {
+    console.error("Silent reconnect failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Connect to MetaMask
+ * Shows popup ONLY if not already connected, or if called after disconnect
+ */
 export async function connectWallet(): Promise<WalletConnection | null> {
   if (!window.ethereum) {
     throw new Error("MetaMask is not installed!");
   }
 
   try {
-    // Request accounts from MetaMask (this will always prompt user)
     const ethereum = window.ethereum as any;
+
+    // If user disconnected, we need to force a new connection popup
+    // Check if we should request permissions first
+    const wasConnected = wasWalletConnected();
+
+    if (!wasConnected) {
+      // First time connecting or after disconnect - request permissions to show account selector
+      await ethereum.request?.({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+      });
+    }
+
+    // Get accounts
     const accounts = (await ethereum.request?.({
       method: "eth_requestAccounts",
     })) as string[] | undefined;
@@ -94,18 +153,23 @@ export async function connectWallet(): Promise<WalletConnection | null> {
       throw new Error("No accounts found");
     }
 
-    // Create provider by connecting to window.ethereum
+    // Create provider
     const provider = new ethers.providers.Web3Provider(ethereum as any);
     const signer = provider.getSigner();
     const address = await signer.getAddress();
 
-    // Store connection state (NEW)
+    // Store connection state
     localStorage.setItem("walletConnected", "true");
 
     return { provider, signer, address };
   } catch (error: any) {
     if (error.code === 4001) {
       throw new Error("User rejected MetaMask connection");
+    }
+    if (error.code === -32002) {
+      throw new Error(
+        "Connection request already pending. Please check MetaMask.",
+      );
     }
     throw new Error(error.message || "Failed to connect wallet");
   }
