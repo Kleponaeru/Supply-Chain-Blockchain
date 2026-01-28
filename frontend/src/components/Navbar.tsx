@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { connectWallet } from "../utils/blockchain";
 import { roleToString } from "../utils/blockchain";
-import { ROLE_EMOJIS } from "../config/walletConfig";
+import { ROLE_ICONS } from "../config/walletConfig";
 import { SiBlockchaindotcom } from "react-icons/si";
 import MetaMaskLogo from "../assets/MetaMask-icon-fox.svg";
 import { IoMdLogOut } from "react-icons/io";
@@ -101,14 +101,25 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center - Role Badge */}
-          {address && role > 0 && (
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30 backdrop-blur-sm">
-              <span className="text-lg">{ROLE_EMOJIS[role] || "❓"}</span>
-              <span className="text-sm font-semibold">
-                {roleToString(role)}
-              </span>
-            </div>
-          )}
+          {address &&
+            role > 0 &&
+            (() => {
+              const RoleIcon = ROLE_ICONS[role];
+              return (
+                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30 backdrop-blur-sm">
+                  {RoleIcon && (
+                    <IconContext.Provider
+                      value={{ className: "w-4 h-4 text-blue-300" }}
+                    >
+                      <RoleIcon />
+                    </IconContext.Provider>
+                  )}
+                  <span className="text-sm font-semibold">
+                    {roleToString(role)}
+                  </span>
+                </div>
+              );
+            })()}
 
           {/* Right Section - Wallet Controls */}
           <div className="flex items-center gap-3">
@@ -135,7 +146,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setIsOpen(!isOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-600/20 transition-all border border-blue-400/30 backdrop-blur-sm group"
                 >
-                  <div className="flex flex-col items-end">
+                  <div className="flex flex-col items-start">
                     <span className="text-sm font-semibold leading-none">
                       {truncateAddress(address)}
                     </span>
@@ -188,13 +199,25 @@ const Navbar: React.FC<NavbarProps> = ({
                           </IconContext.Provider>
                         </button>
                       </div>
-                      {role > 0 && (
-                        <div className="mt-3 p-2 rounded bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30">
-                          <p className="text-sm font-semibold text-blue-200">
-                            {ROLE_EMOJIS[role]} {roleToString(role)}
-                          </p>
-                        </div>
-                      )}
+                      {role > 0 &&
+                        (() => {
+                          const RoleIcon = ROLE_ICONS[role];
+                          return (
+                            <div className="mt-3 p-2 rounded bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30">
+                              <div className="flex items-center gap-2 text-blue-200 font-semibold">
+                                {RoleIcon && (
+                                  <IconContext.Provider
+                                    value={{ className: "w-4 h-4" }}
+                                  >
+                                    <RoleIcon />
+                                  </IconContext.Provider>
+                                )}
+                                <span>{roleToString(role)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                       {role === 0 && (
                         <div className="mt-3 p-2 rounded bg-yellow-500/20 border border-yellow-400/30">
                           <div className="flex items-start gap-2">
