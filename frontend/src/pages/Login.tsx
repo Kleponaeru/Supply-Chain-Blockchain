@@ -1,5 +1,8 @@
 import React from "react";
+import { IconContext } from "react-icons";
 import { SiBlockchaindotcom } from "react-icons/si";
+import { BsRocketTakeoff } from "react-icons/bs";
+import { BsInfoCircle } from "react-icons/bs";
 
 const Login: React.FC = () => {
   return (
@@ -42,7 +45,17 @@ const Login: React.FC = () => {
               <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 backdrop-blur-lg bg-opacity-95 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <span className="text-2xl">🚀</span>
+                    <span className="text-2xl">
+                      <IconContext.Provider
+                        value={{
+                          className: "w-8 h-8 text-blue-600",
+                        }}
+                      >
+                        <div>
+                          <BsRocketTakeoff />
+                        </div>
+                      </IconContext.Provider>
+                    </span>
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">
                     Get Started
@@ -96,7 +109,14 @@ const Login: React.FC = () => {
 
                 {/* Info Box */}
                 <div className="mt-8 p-5 rounded-xl bg-amber-50 border border-amber-200 flex gap-3">
-                  <div className="text-2xl flex-shrink-0">💡</div>
+                  <div className="text-2xl flex-shrink-0">
+                    <IconContext.Provider
+                      value={{ className: "w-8 h-8 text-amber-900" }}
+                    >
+                      {" "}
+                      <BsInfoCircle />
+                    </IconContext.Provider>
+                  </div>
                   <div>
                     <p className="font-semibold text-amber-900 mb-1">
                       MetaMask Required

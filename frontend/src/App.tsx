@@ -18,6 +18,8 @@ import Distributor from "./pages/Distributor";
 import Retailer from "./pages/Retailer";
 import Navbar from "./components/Navbar";
 import { SiBlockchaindotcom } from "react-icons/si";
+import { FaQuestion } from "react-icons/fa";
+import { IconContext } from "react-icons";
 
 function App() {
   const [address, setAddress] = useState<string | null>(null);
@@ -28,8 +30,6 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log("🚀 Initializing app...");
-
         // Only auto-connect if user previously connected
         if (wasWalletConnected()) {
           const currentAccount = await getCurrentAccount();
@@ -142,7 +142,16 @@ function App() {
                   <div className="max-w-4xl mx-auto px-4 py-16 text-center">
                     <div className="bg-white rounded-2xl shadow-xl p-12 border border-amber-200">
                       <div className="inline-block p-4 bg-amber-100 rounded-full mb-6">
-                        <div className="text-6xl">❓</div>
+                        <div className="text-6xl">
+                          <IconContext.Provider
+                            value={{
+                              className:
+                                "text-yellow-600 w-6 h-6 mt-0.5 flex-shrink-0",
+                            }}
+                          >
+                            <FaQuestion />
+                          </IconContext.Provider>
+                        </div>
                       </div>
                       <h2 className="text-3xl font-bold text-gray-900 mb-4">
                         Role Not Assigned
@@ -158,7 +167,7 @@ function App() {
                           </span>
                         </p>
                         <p className="text-xs text-amber-700">
-                          💡 To test locally, add your address to{" "}
+                          To test locally, add your address to{" "}
                           <code className="bg-white px-2 py-1 rounded font-mono">
                             src/config/walletConfig.ts
                           </code>

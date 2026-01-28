@@ -3,6 +3,12 @@ import { connectWallet } from "../utils/blockchain";
 import { roleToString } from "../utils/blockchain";
 import { ROLE_EMOJIS } from "../config/walletConfig";
 import { SiBlockchaindotcom } from "react-icons/si";
+import MetaMaskLogo from "../assets/MetaMask-icon-fox.svg";
+import { IoMdLogOut } from "react-icons/io";
+import { PiUserSwitch } from "react-icons/pi";
+import { IoWarningOutline } from "react-icons/io5";
+import { IconContext } from "react-icons";
+import { IoCopyOutline } from "react-icons/io5";
 
 interface NavbarProps {
   address: string | null;
@@ -86,9 +92,11 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
-                Supply Chain
+                Company XYZ
               </h1>
-              <p className="text-xs text-blue-300/70">Blockchain</p>
+              <p className="text-xs text-blue-300/70">
+                Supply Chain Blockchain
+              </p>
             </div>
           </div>
 
@@ -108,15 +116,17 @@ const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={handleConnectWallet}
                 disabled={isConnecting}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all transform ${
                   isConnecting
                     ? "bg-gray-600 cursor-not-allowed opacity-75"
-                    : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-indigo-500/50"
+                    : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-blue-500/30"
                 }`}
               >
-                <span className="text-lg">🦊</span>
                 <span className="hidden sm:inline">
                   {isConnecting ? "Connecting..." : "Connect Wallet"}
+                </span>
+                <span className="text-lg">
+                  <img src={MetaMaskLogo} alt="MetaMask" className="w-6 h-6" />
                 </span>
               </button>
             ) : (
@@ -160,9 +170,24 @@ const Navbar: React.FC<NavbarProps> = ({
                       <p className="text-xs font-semibold text-blue-300 mb-2">
                         Connected Wallet
                       </p>
-                      <p className="text-sm break-all font-mono bg-slate-900/50 p-2 rounded border border-blue-400/20">
-                        {address}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-mono bg-slate-900/50 px-3 py-2 rounded border border-blue-400/20 flex-1">
+                          {address.slice(0, 6)}...{address.slice(-4)}
+                        </p>
+                        <button
+                          onClick={() => copyToClipboard(address)}
+                          className="p-2 hover:bg-blue-500/20 rounded border border-blue-400/20 transition text-blue-300 hover:text-blue-200 flex-shrink-0"
+                          title="Copy address"
+                        >
+                          <IconContext.Provider
+                            value={{
+                              className: "w-4 h-4",
+                            }}
+                          >
+                            <IoCopyOutline />
+                          </IconContext.Provider>
+                        </button>
+                      </div>
                       {role > 0 && (
                         <div className="mt-3 p-2 rounded bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30">
                           <p className="text-sm font-semibold text-blue-200">
@@ -172,12 +197,24 @@ const Navbar: React.FC<NavbarProps> = ({
                       )}
                       {role === 0 && (
                         <div className="mt-3 p-2 rounded bg-yellow-500/20 border border-yellow-400/30">
-                          <p className="text-xs text-yellow-200">
-                            ⚠️ No role assigned to this wallet
-                          </p>
-                          <p className="text-xs text-yellow-200/70 mt-1">
-                            Add your address to walletConfig.ts
-                          </p>
+                          <div className="flex items-start gap-2">
+                            <IconContext.Provider
+                              value={{
+                                className:
+                                  "text-yellow-400 w-4 h-4 mt-0.5 flex-shrink-0",
+                              }}
+                            >
+                              <IoWarningOutline />
+                            </IconContext.Provider>
+                            <div>
+                              <p className="text-xs text-yellow-200">
+                                No role assigned to this wallet
+                              </p>
+                              <p className="text-xs text-yellow-200/70 mt-1">
+                                Add your address to walletConfig.ts
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -185,25 +222,33 @@ const Navbar: React.FC<NavbarProps> = ({
                     {/* Actions */}
                     <div className="p-2 space-y-1">
                       <button
-                        onClick={() => copyToClipboard(address)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-500/20 rounded-lg transition text-sm font-medium flex items-center gap-2 text-blue-300 hover:text-blue-200"
-                      >
-                        <span>📋</span> Copy Address
-                      </button>
-                      <button
                         onClick={handleConnectWallet}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-500/20 rounded-lg transition text-sm font-medium flex items-center gap-2 text-blue-300 hover:text-blue-200"
+                        className="w-full text-left px-4 py-2.5 hover:bg-blue-500/20 rounded-lg transition text-sm font-medium flex items-center gap-3 text-blue-300 hover:text-blue-200"
                       >
-                        <span>🔄</span> Switch Wallet
+                        <IconContext.Provider
+                          value={{
+                            className: "w-4 h-4 flex-shrink-0",
+                          }}
+                        >
+                          <PiUserSwitch />
+                        </IconContext.Provider>
+                        <span>Switch Wallet</span>
                       </button>
                     </div>
 
                     {/* Logout */}
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 border-t border-blue-400/20 hover:bg-red-500/20 transition text-sm font-medium flex items-center gap-2 text-red-300 hover:text-red-200 rounded-b-lg"
+                      className="w-full text-left px-4 py-2.5 border-t border-blue-400/20 hover:bg-red-500/20 transition text-sm font-medium flex items-center gap-3 text-red-300 hover:text-red-200 rounded-b-lg p-2 mx-2 mb-2"
                     >
-                      <span>🚪</span> Logout
+                      <IconContext.Provider
+                        value={{
+                          className: "w-4 h-4 flex-shrink-0",
+                        }}
+                      >
+                        <IoMdLogOut />
+                      </IconContext.Provider>
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}
