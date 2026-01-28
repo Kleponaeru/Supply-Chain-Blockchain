@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { connectWallet } from "../utils/blockchain";
 import { roleToString } from "../utils/blockchain";
 import { ROLE_EMOJIS } from "../config/walletConfig";
+import { SiBlockchaindotcom } from "react-icons/si";
 
 interface NavbarProps {
   address: string | null;
@@ -79,7 +80,9 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Logo Section */}
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="p-2 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg group-hover:shadow-lg group-hover:shadow-blue-500/50 transition-all">
-              <span className="text-xl">🔗</span>
+              <span className="text-xl">
+                <SiBlockchaindotcom />
+              </span>
             </div>
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">

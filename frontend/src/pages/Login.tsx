@@ -1,4 +1,5 @@
 import React from "react";
+import { SiBlockchaindotcom } from "react-icons/si";
 
 const Login: React.FC = () => {
   return (
@@ -16,9 +17,14 @@ const Login: React.FC = () => {
           {/* Header Section */}
           <div className="text-center mb-16 animate-fade-in">
             <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
-              <span className="text-5xl">🔗</span>
+              <span className="text-5xl text-white">
+                <SiBlockchaindotcom />
+              </span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1
+              className="text-5xl md:text-6xl leading-tight py-3 font-bold
+               bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+            >
               Supply Chain Blockchain
             </h1>
             <p className="text-xl text-gray-600 mb-2">
@@ -32,7 +38,7 @@ const Login: React.FC = () => {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             {/* Get Started Card */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-4">
               <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 backdrop-blur-lg bg-opacity-95 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -112,7 +118,7 @@ const Login: React.FC = () => {
             </div>
 
             {/* Roles Sidebar */}
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <h3 className="text-xl font-bold text-gray-900 mb-6">
                 Available Roles
               </h3>
@@ -150,11 +156,11 @@ const Login: React.FC = () => {
                   <p className="text-sm text-gray-600">{role.desc}</p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Features Section */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-gray-100">
+          {/* <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
               Why Choose Our Platform?
             </h2>
@@ -192,7 +198,7 @@ const Login: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

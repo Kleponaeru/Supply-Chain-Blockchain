@@ -17,6 +17,7 @@ import Manufacturer from "./pages/Manufacturer";
 import Distributor from "./pages/Distributor";
 import Retailer from "./pages/Retailer";
 import Navbar from "./components/Navbar";
+import { SiBlockchaindotcom } from "react-icons/si";
 
 function App() {
   const [address, setAddress] = useState<string | null>(null);
@@ -105,7 +106,9 @@ function App() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
         <div className="text-center">
           <div className="inline-block p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg animate-bounce">
-            <span className="text-5xl">🔗</span>
+            <span className="text-5xl">
+              <SiBlockchaindotcom />
+            </span>
           </div>
           <p className="text-gray-600 font-semibold">
             Initializing Supply Chain...
