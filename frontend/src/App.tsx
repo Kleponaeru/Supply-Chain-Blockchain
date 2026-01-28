@@ -22,16 +22,21 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log("🚀 Initializing app...", window.ethereum?.selectedAddress);
         if (window.ethereum?.selectedAddress) {
           const result = await connectWallet();
           if (result) {
+            console.log("📍 Found existing wallet connection:", result.address);
             const detectedRole = getRoleFromAddress(result.address);
+            console.log("👤 Detected role:", detectedRole);
             setAddress(result.address);
             setRole(detectedRole);
           }
+        } else {
+          console.log("📭 No wallet currently connected");
         }
       } catch (error) {
-        console.log("No wallet connected");
+        console.log("ℹ️ Wallet initialization skipped:", error);
       } finally {
         setIsInitialized(true);
       }
@@ -41,29 +46,36 @@ function App() {
   }, []);
 
   const handleAddressChange = (newAddress: string) => {
+    console.log("🔄 Address changed:", newAddress);
     setAddress(newAddress);
     const detectedRole = getRoleFromAddress(newAddress);
+    console.log("👤 New role detected:", detectedRole);
     setRole(detectedRole);
   };
 
   const handleLogout = () => {
+    console.log("🚪 Logging out...");
     setAddress(null);
     setRole(0);
   };
 
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
         <div className="text-center">
-          <div className="text-6xl mb-4">🔗</div>
-          <p className="text-gray-600">Initializing...</p>
+          <div className="inline-block p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg animate-bounce">
+            <span className="text-5xl">🔗</span>
+          </div>
+          <p className="text-gray-600 font-semibold">
+            Initializing Supply Chain...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <Navbar
         address={address}
         role={role}
@@ -83,16 +95,32 @@ function App() {
               <Route
                 path="/"
                 element={
-                  <div className="max-w-6xl mx-auto px-4 py-12 text-center">
-                    <div className="text-6xl mb-4">❓</div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                      No Role Assigned
-                    </h2>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Your wallet address is not assigned any role. Please
-                      contact the administrator to assign a role to your wallet.
-                    </p>
-                    <p className="text-sm text-gray-500 font-mono">{address}</p>
+                  <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+                    <div className="bg-white rounded-2xl shadow-xl p-12 border border-amber-200">
+                      <div className="inline-block p-4 bg-amber-100 rounded-full mb-6">
+                        <div className="text-6xl">❓</div>
+                      </div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                        Role Not Assigned
+                      </h2>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto text-lg">
+                        Your wallet doesn't have a role assigned. Please contact
+                        your administrator to add your wallet to the system.
+                      </p>
+                      <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 text-left inline-block">
+                        <p className="text-sm text-gray-600 mb-2">
+                          <span className="font-mono font-semibold text-gray-900">
+                            {address}
+                          </span>
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          💡 To test locally, add your address to{" "}
+                          <code className="bg-white px-2 py-1 rounded font-mono">
+                            src/config/walletConfig.ts
+                          </code>
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 }
               />

@@ -7,7 +7,7 @@ const CONTRACT_ADDRESS =
   "0xa733E8329cc096b232DAC55C9feDD10AeD1E9421";
 
 export interface WalletConnection {
-  provider: ethers.providers.Web3Provider;
+  provider: any;
   signer: Signer;
   address: string;
 }
@@ -43,16 +43,32 @@ export enum Status {
 // Connect to MetaMask
 export async function connectWallet(): Promise<WalletConnection | null> {
   if (!window.ethereum) {
-    alert("MetaMask is not installed!");
-    return null;
+    throw new Error("MetaMask is not installed!");
   }
 
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  const signer = provider.getSigner();
-  const address = await signer.getAddress();
+  try {
+    // Request accounts from MetaMask (this will always prompt user)
+    const ethereum = window.ethereum as any;
+    const accounts = (await ethereum.request?.({
+      method: "eth_requestAccounts",
+    })) as string[] | undefined;
 
-  return { provider, signer, address };
+    if (!accounts || accounts.length === 0) {
+      throw new Error("No accounts found");
+    }
+
+    // Create provider by connecting to window.ethereum
+    const provider = new ethers.providers.Web3Provider(ethereum as any);
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
+
+    return { provider, signer, address };
+  } catch (error: any) {
+    if (error.code === 4001) {
+      throw new Error("User rejected MetaMask connection");
+    }
+    throw new Error(error.message || "Failed to connect wallet");
+  }
 }
 
 // Get contract instance

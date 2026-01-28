@@ -31,6 +31,20 @@ export const ROLE_EMOJIS: { [key: number]: string } = {
  * Returns 0 if no role found
  */
 export function getRoleFromAddress(address: string): number {
+  if (!address) {
+    console.warn("getRoleFromAddress: address is empty");
+    return 0;
+  }
+
   const normalizedAddress = address.toLowerCase();
-  return WALLET_ROLES[normalizedAddress] || 0;
+  console.log(
+    "🔍 Looking up role for address:",
+    normalizedAddress,
+    "Configured roles:",
+    Object.keys(WALLET_ROLES).map((a) => a.toLowerCase()),
+  );
+
+  const role = WALLET_ROLES[normalizedAddress] || 0;
+  console.log("✅ Detected role:", role);
+  return role;
 }
