@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  background: #eff6ff; /* Solid fallback matching middle of gradient */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to bottom right, #f8fafc, #eff6ff, #f1f5f9) fixed;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  background: transparent;
+}
