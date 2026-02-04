@@ -14,8 +14,8 @@ async function main() {
 
     // User's wallet address
     const userWallet = "0xa733E8329cc096b232DAC55C9feDD10AeD1E9421";
-    const distributorWallet = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
-    const retailerWallet = "0x90F79bf6EB2c4f870365E785982E1f101E93b906";
+    const distributorWallet = "0xBf00C0a3C8a254CEDd80039eF204800DeE14AbA5";
+    const retailerWallet = "0x0C906e3b18497963520489d79612F521f92eCF53";
 
     console.log("\n📋 Assigning roles...");
     console.log("   Your Wallet (Manufacturer):", userWallet);
