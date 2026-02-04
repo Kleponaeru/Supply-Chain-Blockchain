@@ -17,7 +17,12 @@ export interface Product {
   name: string;
   batchId: string;
   owner: string;
+  manufacturer: string; // Added: Address of who created the product
   status: number;
+  quantity: bigint; // Added: Number of units
+  origin: string; // Added: Manufacturing location
+  manufacturingDate: bigint; // Added: Manufacturing date timestamp
+  qualityStandard: string; // Added: Quality certification
   createdAt: bigint;
 }
 
@@ -256,16 +261,75 @@ export async function getProduct(
   try {
     const contract = getContract(signer);
     const product = await contract.products(productId);
+
+    // Get manufacturer data to populate all fields
+    const manufacturerData = await contract.getManufacturerData(productId);
+
     return {
-      id: product.id,
+      id: BigInt(product.id),
       name: product.name,
       batchId: product.batchId,
       owner: product.owner,
+      manufacturer: manufacturerData.manufacturer,
       status: Number(product.status),
-      createdAt: product.createdAt,
+      quantity: manufacturerData.quantity,
+      origin: manufacturerData.origin,
+      manufacturingDate: manufacturerData.manufacturingDate,
+      qualityStandard: manufacturerData.qualityStandard,
+      createdAt: BigInt(product.createdAt),
     };
-  } catch {
+  } catch (error) {
+    console.error("Error fetching product:", error);
     return null;
+  }
+}
+
+// Get all products created by manufacturer (UPDATED)
+export async function getManufacturerProducts(
+  manufacturerAddress: string,
+  signer: Signer,
+): Promise<Product[]> {
+  try {
+    const contract = getContract(signer);
+    const productCount = await contract.productCount();
+    const products: Product[] = [];
+
+    for (let i = 1; i <= Number(productCount); i++) {
+      try {
+        const product = await contract.products(i);
+
+        // Get manufacturer data to check if this product belongs to the manufacturer
+        const manufacturerData = await contract.getManufacturerData(i);
+
+        // Only include products created by this manufacturer
+        if (
+          manufacturerData.manufacturer.toLowerCase() ===
+          manufacturerAddress.toLowerCase()
+        ) {
+          products.push({
+            id: BigInt(product.id),
+            name: product.name,
+            batchId: product.batchId,
+            owner: product.owner,
+            manufacturer: manufacturerData.manufacturer,
+            status: Number(product.status),
+            quantity: manufacturerData.quantity,
+            origin: manufacturerData.origin,
+            manufacturingDate: manufacturerData.manufacturingDate,
+            qualityStandard: manufacturerData.qualityStandard,
+            createdAt: BigInt(product.createdAt),
+          });
+        }
+      } catch (error) {
+        // Skip products that error (might not exist or have no manufacturer data)
+        console.log(`Skipping product ${i}:`, error);
+        continue;
+      }
+    }
+    return products;
+  } catch (error) {
+    console.error("Error fetching manufacturer products:", error);
+    return [];
   }
 }
 
