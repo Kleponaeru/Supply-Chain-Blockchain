@@ -14,6 +14,7 @@ import {
 import Modal from "../components/Modal";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { modal, toast } from "../utils/alert";
+import { IoCopyOutline } from "react-icons/io5";
 
 type SortOption =
   | "newest"
@@ -364,29 +365,15 @@ const Manufacturer: React.FC = () => {
           </p>
         </div>
 
-        {/* Alerts */}
-        {/* <div className="space-y-3 mb-8">
-          {error && (
-            <Alert
-              type="error"
-              message={error}
-              onClose={() => setError(null)}
-            />
-          )}
-          {success && (
-            <Alert
-              type="success"
-              message={success}
-              onClose={() => setSuccess(null)}
-            />
-          )}
-        </div> */}
-
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold transition-all transform shadow-lg flex items-center justify-center gap-2 hover:scale-105"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 \
+            hover:from-blue-700 hover:to-indigo-700 \
+            hover:-translate-y-0.5 hover:shadow-md \
+            text-white py-3 rounded-xl font-bold transition-all duration-300\
+            transform shadow-lg flex items-center justify-center gap-2"
           >
             <IconContext.Provider value={{ className: "w-5 h-5" }}>
               <MdAddBox />
@@ -399,7 +386,11 @@ const Manufacturer: React.FC = () => {
             className={`py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 ${
               products.length === 0
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white transform hover:scale-105"
+                : "border border-emerald-600 text-emerald-600 bg-transparent \
+                  hover:bg-gradient-to-r hover:from-emerald-600 hover:to-teal-600 \
+                  hover:text-white \
+                  hover:-translate-y-0.5 hover:shadow-md \
+                  transition-all duration-300"
             }`}
           >
             <IconContext.Provider value={{ className: "w-5 h-5" }}>
@@ -411,14 +402,14 @@ const Manufacturer: React.FC = () => {
 
         {/* Search, Filter, Sort Bar */}
         {products.length > 0 && (
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+            <div className="flex flex-col md:flex-row gap-3">
               {/* Search */}
               <div className="flex-1 relative">
                 <IconContext.Provider
                   value={{
                     className:
-                      "w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2",
+                      "w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none",
                   }}
                 >
                   <MdSearch />
@@ -428,17 +419,38 @@ const Manufacturer: React.FC = () => {
                   placeholder="Search by name, batch ID, origin, or quality standard..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* Filter Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
                   showFilters || filterStatus !== "all"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-[0.98]"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                 }`}
               >
                 <IconContext.Provider value={{ className: "w-5 h-5" }}>
@@ -446,18 +458,18 @@ const Manufacturer: React.FC = () => {
                 </IconContext.Provider>
                 Filters
                 {filterStatus !== "all" && (
-                  <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold min-w-[20px] text-center">
                     1
                   </span>
                 )}
               </button>
 
               {/* Sort */}
-              <div className="relative">
+              <div className="relative min-w-[200px]">
                 <IconContext.Provider
                   value={{
                     className:
-                      "w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2",
+                      "w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none",
                   }}
                 >
                   <MdSort />
@@ -465,7 +477,7 @@ const Manufacturer: React.FC = () => {
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value as SortOption)}
-                  className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-semibold text-gray-700 appearance-none cursor-pointer"
+                  className="w-full pl-11 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium text-gray-700 appearance-none cursor-pointer transition-all duration-200 hover:border-gray-400"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -474,63 +486,103 @@ const Manufacturer: React.FC = () => {
                   <option value="quantity-high">Quantity (High-Low)</option>
                   <option value="quantity-low">Quantity (Low-High)</option>
                 </select>
+                {/* Custom dropdown arrow */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
             {/* Expandable Filters */}
             {showFilters && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm font-semibold text-gray-700 self-center mr-2">
+              <div className="mt-5 pt-5 border-t border-gray-200 animate-fadeIn">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700 mr-1">
                     Status:
                   </span>
                   <button
                     onClick={() => setFilterStatus("all")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                       filterStatus === "all"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                     }`}
                   >
-                    All ({products.length})
+                    All <span className="opacity-75">({products.length})</span>
                   </button>
                   <button
                     onClick={() => setFilterStatus("0")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                       filterStatus === "0"
-                        ? "bg-blue-600 text-white"
-                        : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200 border border-blue-200"
                     }`}
                   >
-                    Created ({products.filter((p) => p.status === 0).length})
+                    Created{" "}
+                    <span className="opacity-75">
+                      ({products.filter((p) => p.status === 0).length})
+                    </span>
                   </button>
                   <button
                     onClick={() => setFilterStatus("1")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                       filterStatus === "1"
-                        ? "bg-yellow-600 text-white"
-                        : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200"
+                        ? "bg-yellow-600 text-white shadow-sm"
+                        : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 active:bg-yellow-200 border border-yellow-200"
                     }`}
                   >
-                    In Transit ({products.filter((p) => p.status === 1).length})
+                    In Transit{" "}
+                    <span className="opacity-75">
+                      ({products.filter((p) => p.status === 1).length})
+                    </span>
                   </button>
                   <button
                     onClick={() => setFilterStatus("2")}
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                       filterStatus === "2"
-                        ? "bg-green-600 text-white"
-                        : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                        ? "bg-green-600 text-white shadow-sm"
+                        : "bg-green-50 text-green-700 hover:bg-green-100 active:bg-green-200 border border-green-200"
                     }`}
                   >
-                    Delivered ({products.filter((p) => p.status === 2).length})
+                    Delivered{" "}
+                    <span className="opacity-75">
+                      ({products.filter((p) => p.status === 2).length})
+                    </span>
                   </button>
                 </div>
               </div>
             )}
 
             {/* Results Count */}
-            <div className="mt-3 text-sm text-gray-600">
-              Showing {filteredProducts.length} of {products.length} products
+            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
+              <span className="text-gray-600">
+                Showing{" "}
+                <span className="font-semibold text-gray-900">
+                  {filteredProducts.length}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-gray-900">
+                  {products.length}
+                </span>{" "}
+                products
+              </span>
+              {searchQuery && (
+                <span className="text-gray-500 italic">
+                  Search: "{searchQuery}"
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -770,15 +822,15 @@ const Manufacturer: React.FC = () => {
               setDetailsProduct(null);
             }}
           >
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-5 max-h-[32rem] overflow-y-auto px-1 py-1">
               {/* Product Header */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-200">
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">
                   {detailsProduct.name}
                 </h3>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border shadow-sm ${
                       statusColors[
                         detailsProduct.status as keyof typeof statusColors
                       ]
@@ -786,44 +838,52 @@ const Manufacturer: React.FC = () => {
                   >
                     {statusLabels[detailsProduct.status]}
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 font-medium">
                     ID: #{Number(detailsProduct.id)}
                   </span>
                 </div>
               </div>
 
-              {/* Product Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Batch ID</p>
-                  <p className="font-mono font-semibold text-gray-800">
+              {/* Product Information Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
+                    Batch ID
+                  </p>
+                  <p className="font-mono font-semibold text-gray-800 text-sm">
                     {detailsProduct.batchId}
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Quantity</p>
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
+                    Quantity
+                  </p>
                   <p className="font-semibold text-gray-800">
                     {Number(detailsProduct.quantity).toLocaleString()} units
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Origin</p>
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
+                    Origin
+                  </p>
                   <p className="font-semibold text-gray-800">
                     {detailsProduct.origin}
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Quality Standard</p>
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
+                    Quality Standard
+                  </p>
                   <p className="font-semibold text-gray-800">
                     {detailsProduct.qualityStandard}
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
                     Manufacturing Date
                   </p>
                   <p className="font-semibold text-gray-800">
@@ -837,8 +897,10 @@ const Manufacturer: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Created On</p>
+                <div className="group bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <p className="text-xs font-medium text-gray-500 mb-1.5">
+                    Created On
+                  </p>
                   <p className="font-semibold text-gray-800">
                     {new Date(
                       Number(detailsProduct.createdAt) * 1000,
@@ -852,33 +914,38 @@ const Manufacturer: React.FC = () => {
               </div>
 
               {/* Manufacturer Address */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p className="text-xs text-gray-600 mb-2">
+              <div className="bg-blue-50/60 border border-blue-200 rounded-md p-4">
+                <p className="text-xs font-medium text-gray-500 mb-2">
                   Manufacturer Address
                 </p>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-mono text-sm text-gray-800 break-all">
+
+                <div className="flex items-start gap-2">
+                  <p className="font-mono text-sm text-gray-800 break-all leading-relaxed flex-1">
                     {detailsProduct.manufacturer}
                   </p>
+
                   <button
                     onClick={() => copyToClipboard(detailsProduct.manufacturer)}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg font-semibold transition-colors whitespace-nowrap"
+                    className="p-2 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                    title="Copy address"
                   >
-                    Copy
+                    <IoCopyOutline />
                   </button>
                 </div>
               </div>
 
               {/* Close Button */}
-              <button
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setDetailsProduct(null);
-                }}
-                className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors"
-              >
-                Close
-              </button>
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setDetailsProduct(null);
+                  }}
+                  className="w-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </Modal>
         )}
@@ -899,10 +966,11 @@ const Manufacturer: React.FC = () => {
             });
           }}
         >
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Product Name *
+          <div className="space-y-5 max-h-[32rem] overflow-y-auto px-1 py-1">
+            {/* Product Name */}
+            <div className="group">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Product Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -914,13 +982,14 @@ const Manufacturer: React.FC = () => {
                     productName: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Batch ID *
+            {/* Batch ID */}
+            <div className="group">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Batch ID <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -932,31 +1001,55 @@ const Manufacturer: React.FC = () => {
                     batchId: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Quantity (units) *
-              </label>
-              <input
-                type="number"
-                placeholder="e.g., 1000"
-                value={createFormData.quantity}
-                onChange={(e) =>
-                  setCreateFormData({
-                    ...createFormData,
-                    quantity: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              />
+            {/* Two Column Layout for Quantity and Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Quantity */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Quantity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g., 1000"
+                  value={createFormData.quantity}
+                  onChange={(e) =>
+                    setCreateFormData({
+                      ...createFormData,
+                      quantity: e.target.value,
+                    })
+                  }
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Manufacturing Date */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Manufacturing Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={createFormData.manufacturingDate}
+                  onChange={(e) =>
+                    setCreateFormData({
+                      ...createFormData,
+                      manufacturingDate: e.target.value,
+                    })
+                  }
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Origin / Manufacturing Location *
+            {/* Origin */}
+            <div className="group">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Origin / Manufacturing Location{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -968,30 +1061,15 @@ const Manufacturer: React.FC = () => {
                     origin: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Manufacturing Date *
-              </label>
-              <input
-                type="date"
-                value={createFormData.manufacturingDate}
-                onChange={(e) =>
-                  setCreateFormData({
-                    ...createFormData,
-                    manufacturingDate: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Quality Standard / Certification *
+            {/* Quality Standard */}
+            <div className="group">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Quality Standard / Certification{" "}
+                <span className="text-red-500">*</span>
               </label>
               <select
                 value={createFormData.qualityStandard}
@@ -1001,9 +1079,11 @@ const Manufacturer: React.FC = () => {
                     qualityStandard: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 cursor-pointer"
               >
-                <option value="">Select Quality Standard</option>
+                <option value="" disabled>
+                  Select Quality Standard
+                </option>
                 <option value="ISO 9001">ISO 9001</option>
                 <option value="ISO 14001">ISO 14001</option>
                 <option value="FDA Approved">FDA Approved</option>
@@ -1012,7 +1092,8 @@ const Manufacturer: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-6 border-t border-gray-200">
               <button
                 onClick={() => {
                   setShowCreateModal(false);
@@ -1025,20 +1106,42 @@ const Manufacturer: React.FC = () => {
                     qualityStandard: "",
                   });
                 }}
-                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateProduct}
                 disabled={isCreating}
-                className={`flex-1 px-4 py-2 rounded-lg font-bold text-white transition-all ${
+                className={`flex-1 px-6 py-2.5 text-sm rounded-lg font-semibold text-white transition-all duration-200 ${
                   isCreating
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] shadow-md hover:shadow-lg"
                 }`}
               >
-                {isCreating ? "Creating..." : "Create Product"}
+                {isCreating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Creating...
+                  </span>
+                ) : (
+                  "Create Product"
+                )}
               </button>
             </div>
           </div>
@@ -1104,21 +1207,29 @@ const Manufacturer: React.FC = () => {
               });
             }}
           >
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                <p className="text-sm text-gray-600 mb-1">Product</p>
-                <p className="font-bold text-gray-800">
+            <div className="space-y-5 max-h-[32rem] overflow-y-auto px-1 py-1">
+              {/* Product Info Card */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+                <p className="text-xs font-medium text-gray-500 mb-1">
+                  Product
+                </p>
+                <p className="font-bold text-lg text-gray-800">
                   {selectedProduct.name}
                 </p>
-                <p className="text-sm text-gray-600">
-                  Batch: {selectedProduct.batchId} • Qty:{" "}
-                  {Number(selectedProduct.quantity).toLocaleString()}
+                <p className="text-sm text-gray-600 mt-1">
+                  Batch:{" "}
+                  <span className="font-medium">{selectedProduct.batchId}</span>{" "}
+                  • Qty:{" "}
+                  <span className="font-medium">
+                    {Number(selectedProduct.quantity).toLocaleString()}
+                  </span>
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Distributor Address *
+              {/* Distributor Address */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Distributor Address <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1130,14 +1241,15 @@ const Manufacturer: React.FC = () => {
                       distributorAddress: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-white"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm bg-white transition-all duration-200 placeholder:text-gray-400"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Temperature (°C) *
+              {/* Temperature & Humidity */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Temperature (°C) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1149,12 +1261,12 @@ const Manufacturer: React.FC = () => {
                         temperature: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Humidity (%) *
+                <div className="group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Humidity (%) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1166,14 +1278,15 @@ const Manufacturer: React.FC = () => {
                         humidity: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Current Location *
+              {/* Current Location */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Current Location <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1185,51 +1298,57 @@ const Manufacturer: React.FC = () => {
                       location: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 placeholder:text-gray-400"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Transportation Mode *
-                </label>
-                <select
-                  value={transferFormData.transportationMode}
-                  onChange={(e) =>
-                    setTransferFormData({
-                      ...transferFormData,
-                      transportationMode: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">Select Transportation Mode</option>
-                  <option value="Air">Air</option>
-                  <option value="Sea">Sea</option>
-                  <option value="Road">Road</option>
-                  <option value="Rail">Rail</option>
-                  <option value="Multi-Modal">Multi-Modal</option>
-                </select>
+              {/* Transportation Mode & Delivery Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Transportation Mode <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={transferFormData.transportationMode}
+                    onChange={(e) =>
+                      setTransferFormData({
+                        ...transferFormData,
+                        transportationMode: e.target.value,
+                      })
+                    }
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200 cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      Select Mode
+                    </option>
+                    <option value="Air">✈️ Air</option>
+                    <option value="Sea">🚢 Sea</option>
+                    <option value="Road">🚛 Road</option>
+                    <option value="Rail">🚂 Rail</option>
+                    <option value="Multi-Modal">🔄 Multi-Modal</option>
+                  </select>
+                </div>
+
+                <div className="group">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Expected Delivery <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={transferFormData.expectedDeliveryDate}
+                    onChange={(e) =>
+                      setTransferFormData({
+                        ...transferFormData,
+                        expectedDeliveryDate: e.target.value,
+                      })
+                    }
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Expected Delivery Date *
-                </label>
-                <input
-                  type="date"
-                  value={transferFormData.expectedDeliveryDate}
-                  onChange={(e) =>
-                    setTransferFormData({
-                      ...transferFormData,
-                      expectedDeliveryDate: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => {
                     setShowTransferModal(false);
@@ -1243,22 +1362,43 @@ const Manufacturer: React.FC = () => {
                       expectedDeliveryDate: "",
                     });
                   }}
-                  className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                  className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
                 >
                   Cancel
                 </button>
+
                 <button
                   onClick={handleTransferProduct}
                   disabled={isTransferring}
-                  className={`flex-1 px-4 py-2 rounded-lg font-bold text-white transition-all ${
+                  className={`flex-1 px-6 py-2.5 text-sm rounded-lg font-semibold text-white transition-all duration-200 ${
                     isTransferring
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] shadow-md hover:shadow-lg"
                   }`}
                 >
-                  {isTransferring
-                    ? "Transferring..."
-                    : "Transfer to Distributor"}
+                  {isTransferring ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Transferring...
+                    </span>
+                  ) : (
+                    "Transfer to Distributor"
+                  )}
                 </button>
               </div>
             </div>
