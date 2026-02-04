@@ -1,5 +1,5 @@
 // src/utils/blockchain.ts
-import { ethers, Contract, Signer } from "ethers";
+import { Contract, Signer, BrowserProvider } from "ethers";
 import SupplyChainAbi from "../../../artifacts/contracts/SupplyChain.sol/SupplyChain.json";
 
 const CONTRACT_ADDRESS =
@@ -19,6 +19,39 @@ export interface Product {
   owner: string;
   status: number;
   createdAt: bigint;
+}
+
+export interface ManufacturerData {
+  productId: bigint;
+  productName: string;
+  batchId: string;
+  quantity: bigint;
+  origin: string;
+  manufacturingDate: bigint;
+  qualityStandard: string;
+  manufacturer: string;
+  timestamp: bigint;
+}
+
+export interface DistributorData {
+  productId: bigint;
+  temperature: bigint;
+  humidity: bigint;
+  location: string;
+  transportationMode: string;
+  expectedDeliveryDate: bigint;
+  distributor: string;
+  timestamp: bigint;
+}
+
+export interface RetailerData {
+  productId: bigint;
+  storageCondition: string;
+  expiryDate: bigint;
+  price: bigint;
+  verificationNotes: string;
+  retailer: string;
+  timestamp: bigint;
 }
 
 export interface HistoryRecord {
@@ -109,8 +142,8 @@ export async function silentReconnect(): Promise<WalletConnection | null> {
       return null;
     }
 
-    const provider = new ethers.providers.Web3Provider(ethereum as any);
-    const signer = provider.getSigner();
+    const provider = new BrowserProvider(ethereum as any);
+    const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
     return { provider, signer, address };
@@ -154,8 +187,8 @@ export async function connectWallet(): Promise<WalletConnection | null> {
     }
 
     // Create provider
-    const provider = new ethers.providers.Web3Provider(ethereum as any);
-    const signer = provider.getSigner();
+    const provider = new BrowserProvider(ethereum as any);
+    const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
     // Store connection state
@@ -194,12 +227,23 @@ export async function getUserRole(
 
 // Create product
 export async function createProduct(
-  name: string,
+  productName: string,
   batchId: string,
+  quantity: bigint,
+  origin: string,
+  manufacturingDate: bigint,
+  qualityStandard: string,
   signer: Signer,
 ): Promise<string> {
   const contract = getContract(signer);
-  const tx = await contract.createProduct(name, batchId);
+  const tx = await contract.createProduct(
+    productName,
+    batchId,
+    quantity,
+    origin,
+    manufacturingDate,
+    qualityStandard,
+  );
   const receipt = await tx.wait();
   return receipt.transactionHash;
 }
@@ -239,14 +283,139 @@ export async function getProductHistory(
   }));
 }
 
-// Transfer product
+// Transfer product to distributor
+export async function transferToDistributor(
+  productId: number,
+  distributorAddress: string,
+  temperature: number,
+  humidity: number,
+  location: string,
+  transportationMode: string,
+  expectedDeliveryDate: number,
+  signer: Signer,
+): Promise<string> {
+  const contract = getContract(signer);
+  const tx = await contract.transferToDistributor(
+    productId,
+    distributorAddress,
+    temperature,
+    humidity,
+    location,
+    transportationMode,
+    expectedDeliveryDate,
+  );
+  const receipt = await tx.wait();
+  return receipt.transactionHash;
+}
+
+// Transfer product to retailer
+export async function transferToRetailer(
+  productId: number,
+  retailerAddress: string,
+  storageCondition: string,
+  expiryDate: number,
+  price: bigint,
+  verificationNotes: string,
+  signer: Signer,
+): Promise<string> {
+  const contract = getContract(signer);
+  const tx = await contract.transferToRetailer(
+    productId,
+    retailerAddress,
+    storageCondition,
+    expiryDate,
+    price,
+    verificationNotes,
+  );
+  const receipt = await tx.wait();
+  return receipt.transactionHash;
+}
+
+// Get manufacturer data
+export async function getManufacturerData(
+  productId: number,
+  signer: Signer,
+): Promise<ManufacturerData | null> {
+  try {
+    const contract = getContract(signer);
+    const data = await contract.getManufacturerData(productId);
+    return {
+      productId: data.productId,
+      productName: data.productName,
+      batchId: data.batchId,
+      quantity: data.quantity,
+      origin: data.origin,
+      manufacturingDate: data.manufacturingDate,
+      qualityStandard: data.qualityStandard,
+      manufacturer: data.manufacturer,
+      timestamp: data.timestamp,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Get distributor data
+export async function getDistributorData(
+  productId: number,
+  signer: Signer,
+): Promise<DistributorData | null> {
+  try {
+    const contract = getContract(signer);
+    const data = await contract.getDistributorData(productId);
+    return {
+      productId: data.productId,
+      temperature: data.temperature,
+      humidity: data.humidity,
+      location: data.location,
+      transportationMode: data.transportationMode,
+      expectedDeliveryDate: data.expectedDeliveryDate,
+      distributor: data.distributor,
+      timestamp: data.timestamp,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Get retailer data
+export async function getRetailerData(
+  productId: number,
+  signer: Signer,
+): Promise<RetailerData | null> {
+  try {
+    const contract = getContract(signer);
+    const data = await contract.getRetailerData(productId);
+    return {
+      productId: data.productId,
+      storageCondition: data.storageCondition,
+      expiryDate: data.expiryDate,
+      price: data.price,
+      verificationNotes: data.verificationNotes,
+      retailer: data.retailer,
+      timestamp: data.timestamp,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Legacy transfer product (deprecated - use transferToDistributor or transferToRetailer)
 export async function transferProduct(
   productId: number,
   recipientAddress: string,
   signer: Signer,
 ): Promise<string> {
   const contract = getContract(signer);
-  const tx = await contract.transferToDistributor(productId, recipientAddress); // or transferToRetailer depending on signer role
+  const tx = await contract.transferToDistributor(
+    productId,
+    recipientAddress,
+    0,
+    0,
+    "",
+    "",
+    0,
+  );
   const receipt = await tx.wait();
   return receipt.transactionHash;
 }

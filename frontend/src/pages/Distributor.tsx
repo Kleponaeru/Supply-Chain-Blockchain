@@ -7,7 +7,7 @@ import {
   connectWallet,
   Product,
   getProductHistory,
-  transferProduct,
+  transferToRetailer,
   HistoryRecord,
 } from "../utils/blockchain";
 import ProductCard from "../components/ProductCard";
@@ -25,7 +25,13 @@ const Distributor: React.FC = () => {
   // Transfer Modal
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [retailerAddress, setRetailerAddress] = useState("");
+  const [transferFormData, setTransferFormData] = useState({
+    retailerAddress: "",
+    storageCondition: "",
+    expiryDate: "",
+    price: "",
+    verificationNotes: "",
+  });
   const [isTransferring, setIsTransferring] = useState(false);
 
   // Product Details Modal
@@ -76,8 +82,22 @@ const Distributor: React.FC = () => {
   };
 
   const handleTransferProduct = async () => {
-    if (!selectedProduct || !retailerAddress.trim()) {
-      setError("Please select a product and enter retailer address");
+    const {
+      retailerAddress,
+      storageCondition,
+      expiryDate,
+      price,
+      verificationNotes,
+    } = transferFormData;
+
+    if (
+      !selectedProduct ||
+      !retailerAddress.trim() ||
+      !storageCondition.trim() ||
+      !expiryDate ||
+      !price.trim()
+    ) {
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -88,13 +108,26 @@ const Distributor: React.FC = () => {
       const wallet = await connectWallet();
       if (!wallet) throw new Error("Wallet connection failed");
 
-      await transferProduct(
+      const exDate = Math.floor(new Date(expiryDate).getTime() / 1000);
+
+      await transferToRetailer(
         Number(selectedProduct.id),
         retailerAddress,
+        storageCondition,
+        exDate,
+        BigInt(price),
+        verificationNotes,
         wallet.signer,
       );
+
       setSuccess(`✓ Product transferred to retailer successfully!`);
-      setRetailerAddress("");
+      setTransferFormData({
+        retailerAddress: "",
+        storageCondition: "",
+        expiryDate: "",
+        price: "",
+        verificationNotes: "",
+      });
       setSelectedProduct(null);
       setShowTransferModal(false);
       await loadReceivedProducts();
@@ -115,21 +148,21 @@ const Distributor: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
               <IconContext.Provider value={{ className: "w-8 h-8 text-white" }}>
                 <MdLocalShipping />
               </IconContext.Provider>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Distributor Dashboard
             </h1>
           </div>
           <p className="text-gray-600 ml-16">
-            Manage received products and distribute to retailers
+            Track inventory and distribute products to retailers
           </p>
         </div>
 
@@ -160,10 +193,10 @@ const Distributor: React.FC = () => {
           {loading ? (
             <LoadingSpinner text="Loading products..." />
           ) : receivedProducts.length === 0 ? (
-            <div className="text-center py-16 bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl border-2 border-dashed border-blue-200 shadow-lg">
+            <div className="text-center py-16 bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl border-2 border-dashed border-emerald-200 shadow-lg">
               <div className="flex justify-center mb-3">
                 <IconContext.Provider
-                  value={{ className: "w-16 h-16 text-blue-600" }}
+                  value={{ className: "w-16 h-16 text-emerald-600" }}
                 >
                   <MdAddBox />
                 </IconContext.Provider>
@@ -190,7 +223,7 @@ const Distributor: React.FC = () => {
                   />
                   <button
                     onClick={() => handleViewDetails(product)}
-                    className="absolute top-3 right-3 w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full flex items-center justify-center text-lg transition"
+                    className="absolute top-3 right-3 w-8 h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-full flex items-center justify-center text-lg transition"
                     title="View details"
                   >
                     <IconContext.Provider value={{ className: "w-4 h-4" }}>
@@ -214,9 +247,9 @@ const Distributor: React.FC = () => {
           }}
         >
           {selectedProductDetails && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-96 overflow-y-auto">
               {/* Product Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border border-emerald-200">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Product Name</p>
@@ -265,7 +298,7 @@ const Distributor: React.FC = () => {
                         className="flex gap-4 pb-4 border-b last:border-b-0"
                       >
                         <div className="flex-shrink-0">
-                          <div className="w-4 h-4 bg-blue-500 rounded-full mt-1"></div>
+                          <div className="w-4 h-4 bg-emerald-500 rounded-full mt-1"></div>
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-gray-800">
@@ -308,11 +341,17 @@ const Distributor: React.FC = () => {
             onClose={() => {
               setShowTransferModal(false);
               setSelectedProduct(null);
-              setRetailerAddress("");
+              setTransferFormData({
+                retailerAddress: "",
+                storageCondition: "",
+                expiryDate: "",
+                price: "",
+                verificationNotes: "",
+              });
             }}
           >
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border border-emerald-200">
                 <p className="text-sm text-gray-600 mb-1">Product</p>
                 <p className="font-bold text-gray-800">
                   {selectedProduct.name}
@@ -329,9 +368,90 @@ const Distributor: React.FC = () => {
                 <input
                   type="text"
                   placeholder="0x..."
-                  value={retailerAddress}
-                  onChange={(e) => setRetailerAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm bg-white"
+                  value={transferFormData.retailerAddress}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      retailerAddress: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Storage Condition *
+                </label>
+                <select
+                  value={transferFormData.storageCondition}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      storageCondition: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                >
+                  <option value="">Select Storage Condition</option>
+                  <option value="Room Temperature">Room Temperature</option>
+                  <option value="Refrigerated">Refrigerated</option>
+                  <option value="Frozen">Frozen</option>
+                  <option value="Climate Controlled">Climate Controlled</option>
+                  <option value="Dry">Dry</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Expiry Date *
+                </label>
+                <input
+                  type="date"
+                  value={transferFormData.expiryDate}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      expiryDate: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Wholesale Price (USD) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g., 500"
+                  value={transferFormData.price}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      price: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Verification Notes (optional)
+                </label>
+                <textarea
+                  placeholder="e.g., All items inspected and verified..."
+                  value={transferFormData.verificationNotes}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      verificationNotes: e.target.value,
+                    })
+                  }
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white resize-none"
                 />
               </div>
 
@@ -340,7 +460,13 @@ const Distributor: React.FC = () => {
                   onClick={() => {
                     setShowTransferModal(false);
                     setSelectedProduct(null);
-                    setRetailerAddress("");
+                    setTransferFormData({
+                      retailerAddress: "",
+                      storageCondition: "",
+                      expiryDate: "",
+                      price: "",
+                      verificationNotes: "",
+                    });
                   }}
                   className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
                 >
@@ -352,10 +478,10 @@ const Distributor: React.FC = () => {
                   className={`flex-1 px-4 py-2 rounded-lg font-bold text-white transition-all ${
                     isTransferring
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                   }`}
                 >
-                  {isTransferring ? "Transferring..." : "Transfer"}
+                  {isTransferring ? "Transferring..." : "Transfer to Retailer"}
                 </button>
               </div>
             </div>

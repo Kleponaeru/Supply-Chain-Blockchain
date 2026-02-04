@@ -26,6 +26,39 @@ contract SupplyChain {
         uint256 createdAt;
     }
 
+    struct ManufacturerData {
+        uint256 productId;
+        string productName;
+        string batchId;
+        uint256 quantity;
+        string origin;
+        uint256 manufacturingDate;
+        string qualityStandard;
+        address manufacturer;
+        uint256 timestamp;
+    }
+
+    struct DistributorData {
+        uint256 productId;
+        uint256 temperature;
+        uint256 humidity;
+        string location;
+        string transportationMode;
+        uint256 expectedDeliveryDate;
+        address distributor;
+        uint256 timestamp;
+    }
+
+    struct RetailerData {
+        uint256 productId;
+        string storageCondition;
+        uint256 expiryDate;
+        uint256 price;
+        string verificationNotes;
+        address retailer;
+        uint256 timestamp;
+    }
+
     struct History {
         address actor;
         Status status;
@@ -39,6 +72,9 @@ contract SupplyChain {
     mapping(address => Role) public roles;
     mapping(uint256 => Product) public products;
     mapping(uint256 => History[]) public productHistory;
+    mapping(uint256 => ManufacturerData) public manufacturerData;
+    mapping(uint256 => DistributorData) public distributorData;
+    mapping(uint256 => RetailerData) public retailerData;
 
     // ===== EVENTS =====
     event RoleAssigned(address indexed user, Role role);
@@ -80,18 +116,34 @@ contract SupplyChain {
     // ===== SUPPLY CHAIN LOGIC =====
 
     function createProduct(
-        string memory _name,
-        string memory _batchId
+        string memory _productName,
+        string memory _batchId,
+        uint256 _quantity,
+        string memory _origin,
+        uint256 _manufacturingDate,
+        string memory _qualityStandard
     ) public onlyRole(Role.Manufacturer) {
         productCount++;
 
         products[productCount] = Product({
             id: productCount,
-            name: _name,
+            name: _productName,
             batchId: _batchId,
             owner: msg.sender,
             status: Status.Created,
             createdAt: block.timestamp
+        });
+
+        manufacturerData[productCount] = ManufacturerData({
+            productId: productCount,
+            productName: _productName,
+            batchId: _batchId,
+            quantity: _quantity,
+            origin: _origin,
+            manufacturingDate: _manufacturingDate,
+            qualityStandard: _qualityStandard,
+            manufacturer: msg.sender,
+            timestamp: block.timestamp
         });
 
         productHistory[productCount].push(
@@ -102,12 +154,17 @@ contract SupplyChain {
             })
         );
 
-        emit ProductCreated(productCount, _name, _batchId, msg.sender);
+        emit ProductCreated(productCount, _productName, _batchId, msg.sender);
     }
 
     function transferToDistributor(
         uint256 _productId,
-        address _distributor
+        address _distributor,
+        uint256 _temperature,
+        uint256 _humidity,
+        string memory _location,
+        string memory _transportationMode,
+        uint256 _expectedDeliveryDate
     ) public onlyRole(Role.Manufacturer) {
         Product storage product = products[_productId];
 
@@ -119,6 +176,17 @@ contract SupplyChain {
 
         product.owner = _distributor;
         product.status = Status.InTransit;
+
+        distributorData[_productId] = DistributorData({
+            productId: _productId,
+            temperature: _temperature,
+            humidity: _humidity,
+            location: _location,
+            transportationMode: _transportationMode,
+            expectedDeliveryDate: _expectedDeliveryDate,
+            distributor: _distributor,
+            timestamp: block.timestamp
+        });
 
         productHistory[_productId].push(
             History({
@@ -138,7 +206,11 @@ contract SupplyChain {
 
     function transferToRetailer(
         uint256 _productId,
-        address _retailer
+        address _retailer,
+        string memory _storageCondition,
+        uint256 _expiryDate,
+        uint256 _price,
+        string memory _verificationNotes
     ) public onlyRole(Role.Distributor) {
         Product storage product = products[_productId];
 
@@ -147,6 +219,16 @@ contract SupplyChain {
 
         product.owner = _retailer;
         product.status = Status.Delivered;
+
+        retailerData[_productId] = RetailerData({
+            productId: _productId,
+            storageCondition: _storageCondition,
+            expiryDate: _expiryDate,
+            price: _price,
+            verificationNotes: _verificationNotes,
+            retailer: _retailer,
+            timestamp: block.timestamp
+        });
 
         productHistory[_productId].push(
             History({
@@ -170,5 +252,23 @@ contract SupplyChain {
         uint256 _productId
     ) public view returns (History[] memory) {
         return productHistory[_productId];
+    }
+
+    function getManufacturerData(
+        uint256 _productId
+    ) public view returns (ManufacturerData memory) {
+        return manufacturerData[_productId];
+    }
+
+    function getDistributorData(
+        uint256 _productId
+    ) public view returns (DistributorData memory) {
+        return distributorData[_productId];
+    }
+
+    function getRetailerData(
+        uint256 _productId
+    ) public view returns (RetailerData memory) {
+        return retailerData[_productId];
     }
 }

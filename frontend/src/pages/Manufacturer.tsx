@@ -6,9 +6,8 @@ import { MdLocalShipping } from "react-icons/md";
 import {
   connectWallet,
   createProduct,
+  transferToDistributor,
   Product,
-  getProductHistory,
-  transferProduct,
 } from "../utils/blockchain";
 import ProductCard from "../components/ProductCard";
 import Modal from "../components/Modal";
@@ -23,14 +22,27 @@ const Manufacturer: React.FC = () => {
 
   // Create Product Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [productName, setProductName] = useState("");
-  const [batchId, setBatchId] = useState("");
+  const [createFormData, setCreateFormData] = useState({
+    productName: "",
+    batchId: "",
+    quantity: "",
+    origin: "",
+    manufacturingDate: "",
+    qualityStandard: "",
+  });
   const [isCreating, setIsCreating] = useState(false);
 
   // Transfer Product Modal
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [distributorAddress, setDistributorAddress] = useState("");
+  const [transferFormData, setTransferFormData] = useState({
+    distributorAddress: "",
+    temperature: "",
+    humidity: "",
+    location: "",
+    transportationMode: "",
+    expectedDeliveryDate: "",
+  });
   const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
@@ -53,8 +65,24 @@ const Manufacturer: React.FC = () => {
   };
 
   const handleCreateProduct = async () => {
-    if (!productName.trim() || !batchId.trim()) {
-      setError("Please fill in all fields");
+    const {
+      productName,
+      batchId,
+      quantity,
+      origin,
+      manufacturingDate,
+      qualityStandard,
+    } = createFormData;
+
+    if (
+      !productName.trim() ||
+      !batchId.trim() ||
+      !quantity.trim() ||
+      !origin.trim() ||
+      !manufacturingDate ||
+      !qualityStandard.trim()
+    ) {
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -65,12 +93,30 @@ const Manufacturer: React.FC = () => {
       const wallet = await connectWallet();
       if (!wallet) throw new Error("Wallet connection failed");
 
-      await createProduct(productName, batchId, wallet.signer);
-      setSuccess(`✓ Product "${productName}" created successfully!`);
-      setProductName("");
-      setBatchId("");
+      const mfgDate = Math.floor(new Date(manufacturingDate).getTime() / 1000);
+
+      await createProduct(
+        productName,
+        batchId,
+        BigInt(quantity),
+        origin,
+        BigInt(mfgDate),
+        qualityStandard,
+        wallet.signer,
+      );
+
+      setSuccess(
+        `✓ Product "${productName}" created successfully on blockchain!`,
+      );
+      setCreateFormData({
+        productName: "",
+        batchId: "",
+        quantity: "",
+        origin: "",
+        manufacturingDate: "",
+        qualityStandard: "",
+      });
       setShowCreateModal(false);
-      // In a real app, you'd fetch the new product here
     } catch (err: any) {
       setError(err.message || "Failed to create product");
     } finally {
@@ -79,8 +125,25 @@ const Manufacturer: React.FC = () => {
   };
 
   const handleTransferProduct = async () => {
-    if (!selectedProduct || !distributorAddress.trim()) {
-      setError("Please select a product and enter distributor address");
+    const {
+      distributorAddress,
+      temperature,
+      humidity,
+      location,
+      transportationMode,
+      expectedDeliveryDate,
+    } = transferFormData;
+
+    if (
+      !selectedProduct ||
+      !distributorAddress.trim() ||
+      !temperature ||
+      !humidity ||
+      !location.trim() ||
+      !transportationMode.trim() ||
+      !expectedDeliveryDate
+    ) {
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -91,13 +154,30 @@ const Manufacturer: React.FC = () => {
       const wallet = await connectWallet();
       if (!wallet) throw new Error("Wallet connection failed");
 
-      await transferProduct(
+      const delDate = Math.floor(
+        new Date(expectedDeliveryDate).getTime() / 1000,
+      );
+
+      await transferToDistributor(
         Number(selectedProduct.id),
         distributorAddress,
+        parseInt(temperature),
+        parseInt(humidity),
+        location,
+        transportationMode,
+        delDate,
         wallet.signer,
       );
-      setSuccess(`✓ Product transferred successfully!`);
-      setDistributorAddress("");
+
+      setSuccess(`✓ Product transferred to distributor successfully!`);
+      setTransferFormData({
+        distributorAddress: "",
+        temperature: "",
+        humidity: "",
+        location: "",
+        transportationMode: "",
+        expectedDeliveryDate: "",
+      });
       setSelectedProduct(null);
       setShowTransferModal(false);
     } catch (err: any) {
@@ -117,7 +197,7 @@ const Manufacturer: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center gap-3 mb-3">
@@ -131,7 +211,7 @@ const Manufacturer: React.FC = () => {
             </h1>
           </div>
           <p className="text-gray-600 ml-16">
-            Create and manage your products on the blockchain
+            Create and manage your products on the blockchain supply chain
           </p>
         </div>
 
@@ -157,7 +237,7 @@ const Manufacturer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold transition-all transform shadow-lg flex items-center justify-center gap-2"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold transition-all transform shadow-lg flex items-center justify-center gap-2 hover:scale-105"
           >
             <IconContext.Provider value={{ className: "w-5 h-5" }}>
               <MdAddBox />
@@ -170,13 +250,13 @@ const Manufacturer: React.FC = () => {
             className={`py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 ${
               products.length === 0
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transform hover:scale-105"
+                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white transform hover:scale-105"
             }`}
           >
             <IconContext.Provider value={{ className: "w-5 h-5" }}>
               <MdLocalShipping />
             </IconContext.Provider>
-            Transfer Product
+            Transfer to Distributor
           </button>
         </div>
 
@@ -226,9 +306,19 @@ const Manufacturer: React.FC = () => {
         <Modal
           isOpen={showCreateModal}
           title="Create New Product"
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => {
+            setShowCreateModal(false);
+            setCreateFormData({
+              productName: "",
+              batchId: "",
+              quantity: "",
+              origin: "",
+              manufacturingDate: "",
+              qualityStandard: "",
+            });
+          }}
         >
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Product Name *
@@ -236,8 +326,13 @@ const Manufacturer: React.FC = () => {
               <input
                 type="text"
                 placeholder="e.g., iPhone 15 Pro"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
+                value={createFormData.productName}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    productName: e.target.value,
+                  })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
             </div>
@@ -249,15 +344,106 @@ const Manufacturer: React.FC = () => {
               <input
                 type="text"
                 placeholder="e.g., BATCH-2024-001"
-                value={batchId}
-                onChange={(e) => setBatchId(e.target.value)}
+                value={createFormData.batchId}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    batchId: e.target.value,
+                  })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Quantity (units) *
+              </label>
+              <input
+                type="number"
+                placeholder="e.g., 1000"
+                value={createFormData.quantity}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    quantity: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Origin / Manufacturing Location *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Shanghai, China"
+                value={createFormData.origin}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    origin: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Manufacturing Date *
+              </label>
+              <input
+                type="date"
+                value={createFormData.manufacturingDate}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    manufacturingDate: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Quality Standard / Certification *
+              </label>
+              <select
+                value={createFormData.qualityStandard}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    qualityStandard: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">Select Quality Standard</option>
+                <option value="ISO 9001">ISO 9001</option>
+                <option value="ISO 14001">ISO 14001</option>
+                <option value="FDA Approved">FDA Approved</option>
+                <option value="CE Certified">CE Certified</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
             <div className="flex gap-3 pt-4">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setCreateFormData({
+                    productName: "",
+                    batchId: "",
+                    quantity: "",
+                    origin: "",
+                    manufacturingDate: "",
+                    qualityStandard: "",
+                  });
+                }}
                 className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
               >
                 Cancel
@@ -284,18 +470,24 @@ const Manufacturer: React.FC = () => {
           onClose={() => setShowTransferModal(false)}
         >
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {products.map((product) => (
-              <button
-                key={Number(product.id)}
-                onClick={() => setSelectedProduct(product)}
-                className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition"
-              >
-                <p className="font-semibold text-gray-800">{product.name}</p>
-                <p className="text-sm text-gray-600">
-                  Batch: {product.batchId}
-                </p>
-              </button>
-            ))}
+            {products.length === 0 ? (
+              <p className="text-center text-gray-600 py-4">
+                No products available
+              </p>
+            ) : (
+              products.map((product) => (
+                <button
+                  key={Number(product.id)}
+                  onClick={() => setSelectedProduct(product)}
+                  className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition"
+                >
+                  <p className="font-semibold text-gray-800">{product.name}</p>
+                  <p className="text-sm text-gray-600">
+                    Batch: {product.batchId}
+                  </p>
+                </button>
+              ))
+            )}
           </div>
         </Modal>
 
@@ -303,14 +495,21 @@ const Manufacturer: React.FC = () => {
         {selectedProduct && (
           <Modal
             isOpen={showTransferModal && !!selectedProduct}
-            title="Transfer Product"
+            title="Transfer to Distributor"
             onClose={() => {
               setShowTransferModal(false);
               setSelectedProduct(null);
-              setDistributorAddress("");
+              setTransferFormData({
+                distributorAddress: "",
+                temperature: "",
+                humidity: "",
+                location: "",
+                transportationMode: "",
+                expectedDeliveryDate: "",
+              });
             }}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-sm text-gray-600 mb-1">Product</p>
                 <p className="font-bold text-gray-800">
@@ -328,9 +527,109 @@ const Manufacturer: React.FC = () => {
                 <input
                   type="text"
                   placeholder="0x..."
-                  value={distributorAddress}
-                  onChange={(e) => setDistributorAddress(e.target.value)}
+                  value={transferFormData.distributorAddress}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      distributorAddress: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Temperature (°C) *
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g., 25"
+                    value={transferFormData.temperature}
+                    onChange={(e) =>
+                      setTransferFormData({
+                        ...transferFormData,
+                        temperature: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Humidity (%) *
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g., 50"
+                    value={transferFormData.humidity}
+                    onChange={(e) =>
+                      setTransferFormData({
+                        ...transferFormData,
+                        humidity: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Current Location *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Shanghai Distribution Center"
+                  value={transferFormData.location}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      location: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Transportation Mode *
+                </label>
+                <select
+                  value={transferFormData.transportationMode}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      transportationMode: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">Select Transportation Mode</option>
+                  <option value="Air">Air</option>
+                  <option value="Sea">Sea</option>
+                  <option value="Road">Road</option>
+                  <option value="Rail">Rail</option>
+                  <option value="Multi-Modal">Multi-Modal</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Expected Delivery Date *
+                </label>
+                <input
+                  type="date"
+                  value={transferFormData.expectedDeliveryDate}
+                  onChange={(e) =>
+                    setTransferFormData({
+                      ...transferFormData,
+                      expectedDeliveryDate: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
               </div>
 
@@ -339,7 +638,14 @@ const Manufacturer: React.FC = () => {
                   onClick={() => {
                     setShowTransferModal(false);
                     setSelectedProduct(null);
-                    setDistributorAddress("");
+                    setTransferFormData({
+                      distributorAddress: "",
+                      temperature: "",
+                      humidity: "",
+                      location: "",
+                      transportationMode: "",
+                      expectedDeliveryDate: "",
+                    });
                   }}
                   className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
                 >
@@ -351,10 +657,12 @@ const Manufacturer: React.FC = () => {
                   className={`flex-1 px-4 py-2 rounded-lg font-bold text-white transition-all ${
                     isTransferring
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                   }`}
                 >
-                  {isTransferring ? "Transferring..." : "Transfer"}
+                  {isTransferring
+                    ? "Transferring..."
+                    : "Transfer to Distributor"}
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -6,7 +6,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import {
-  connectWallet,
   disconnectWallet,
   wasWalletConnected,
   silentReconnect,

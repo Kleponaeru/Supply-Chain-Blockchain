@@ -1,5 +1,5 @@
 import React from "react";
-import { Product, statusToString } from "../utils/blockchain";
+import { Product } from "../utils/blockchain";
 import StatusBadge from "./StatusBadge";
 
 interface ProductCardProps {
