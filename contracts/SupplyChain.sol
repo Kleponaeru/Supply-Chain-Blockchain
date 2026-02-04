@@ -113,6 +113,21 @@ contract SupplyChain {
         emit RoleAssigned(_user, _role);
     }
 
+    // Initialize test roles (for development - only callable by admin once)
+    function initializeTestRoles(
+        address _manufacturer,
+        address _distributor,
+        address _retailer
+    ) public onlyAdmin {
+        roles[_manufacturer] = Role.Manufacturer;
+        roles[_distributor] = Role.Distributor;
+        roles[_retailer] = Role.Retailer;
+
+        emit RoleAssigned(_manufacturer, Role.Manufacturer);
+        emit RoleAssigned(_distributor, Role.Distributor);
+        emit RoleAssigned(_retailer, Role.Retailer);
+    }
+
     // ===== SUPPLY CHAIN LOGIC =====
 
     function createProduct(

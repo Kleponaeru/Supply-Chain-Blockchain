@@ -13,7 +13,6 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
-      // Connection will use default RPC config
       timeout: 40000,
     },
   },
