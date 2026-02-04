@@ -9,6 +9,7 @@ import { PiUserSwitch } from "react-icons/pi";
 import { IoWarningOutline } from "react-icons/io5";
 import { IconContext } from "react-icons";
 import { IoCopyOutline } from "react-icons/io5";
+import { modal, toast } from "../utils/alert";
 
 interface NavbarProps {
   address: string | null;
@@ -72,10 +73,20 @@ const Navbar: React.FC<NavbarProps> = ({
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert("Address copied to clipboard!");
+
+      toast({
+        text: "Address copied to clipboard!",
+        icon: "success",
+        position: "top-end",
+      });
+
       setIsOpen(false);
     } catch {
-      alert("Failed to copy address");
+      toast({
+        text: "Failed to copy address",
+        icon: "error",
+        position: "top-end",
+      });
     }
   };
 

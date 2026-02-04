@@ -11,10 +11,9 @@ import {
   getManufacturerProducts,
   Product,
 } from "../utils/blockchain";
-import ProductCard from "../components/ProductCard";
 import Modal from "../components/Modal";
-import Alert from "../components/Alert";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { modal, toast } from "../utils/alert";
 
 type SortOption =
   | "newest"
@@ -75,6 +74,26 @@ const Manufacturer: React.FC = () => {
   useEffect(() => {
     applyFiltersAndSort();
   }, [products, searchQuery, filterStatus, sortOption]);
+
+  useEffect(() => {
+    if (error) {
+      modal({
+        text: error,
+        icon: "error",
+      });
+      setError(null);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (success) {
+      toast({
+        text: success,
+        icon: "success",
+      });
+      setSuccess(null);
+    }
+  }, [success]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -346,7 +365,7 @@ const Manufacturer: React.FC = () => {
         </div>
 
         {/* Alerts */}
-        <div className="space-y-3 mb-8">
+        {/* <div className="space-y-3 mb-8">
           {error && (
             <Alert
               type="error"
@@ -361,7 +380,7 @@ const Manufacturer: React.FC = () => {
               onClose={() => setSuccess(null)}
             />
           )}
-        </div>
+        </div> */}
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
